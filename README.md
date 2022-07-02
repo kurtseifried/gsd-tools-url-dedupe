@@ -9,10 +9,15 @@ GSD:namespace:URL
 ## returns:
 
 duplicates_in_db=true/false
+
 duplicates_in_queue=true/false
+
 duplicate_in_db_is_real=0-1 (0 ok, 1 not ok?)
+
 duplicate_in_queue_is_real=0-1 (0 ok, 1 not ok?)
+
 duplicates_in_db_list=list of GSDs
+
 duplicates_in_queue_list=list of issues/prs
 
 ## URLS are defined as
