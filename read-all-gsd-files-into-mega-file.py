@@ -46,6 +46,14 @@ def load_gsd_megafile_into_memory(filename):
 	return gsd_data
 
 
+def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value):
+	# Check if url is correctly formatted
+	if validators.url(url_value) == True:
+		print("output handler: " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value))
+	else:
+		print("ERROR handler: " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value))
+
+
 def write_data_to_json_file(json_data, filename):
 	# Raw file, the whole thing
 	with open(filename, 'w', encoding='utf-8') as f:
@@ -56,16 +64,18 @@ def walk_dict(data, gsdkey, namespace):
 	for key,value in data.items():
 		if isinstance(value, str):
 			if str(key) == "url":
-				print (gsdkey + " url " + namespace + " " + value)
+				handle_gsd_output(gsdkey, "url", namespace, value)
 			if str(key) == "repo":
-				print (gsdkey + " repo " + namespace + " " + value)
+				handle_gsd_output(gsdkey, "repo", namespace, value)
 		if isinstance(value, dict):
 			walk_dict(value, gsdkey, namespace)
 		elif isinstance(value, list):
 			for val in value:
 				if isinstance(val, str):
 					if key == "references":
-						print(gsdkey + " references " + namespace + " " + val)
+						# It's a list so we need to walk it
+						for url_entry in value:
+							handle_gsd_output(gsdkey, "references", namespace, url_entry)
 				elif isinstance(val, list):
 					pass
 				else:
@@ -95,7 +105,8 @@ def process_gsd_data(data):
 				continue
 			else:
 				# print an error
-				print("ERROR, UNKNOWN DATA FOUND: " + gsdkey + " " + rootkey )
+				handle_gsd_output(gsdkey, "ERROR", namespace, value)
+				#print("ERROR, UNKNOWN DATA FOUND: " + gsdkey + " " + rootkey )
 
 # Data structure:
 #{TLD:
