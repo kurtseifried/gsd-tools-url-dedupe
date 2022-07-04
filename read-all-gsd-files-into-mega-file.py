@@ -12,6 +12,15 @@ import validators
 import tldextract
 # pip3 install tldextract
 
+#### Options
+#
+# load-filesystem-path - path to gsd-database
+# load-file - file to load
+
+# output-file - file to write to
+#
+
+
 # This only works when run from the gsd-database directory
 filesystem_path = "./"
 gsd_mega_file_name = "GSD-mega-file.json"
@@ -21,6 +30,7 @@ def load_gsd_files_into_memory(path):
 	for root, dirs, files in os.walk(path):
 		for file in files:
 			# Make sure we only load GSD files so check if starts with year
+			# TODO: better check, maybe GSD-INT-INT?
 			if re.match("\./[0-9][0-9][0-9][0-9]/.*", root):
 				gsd = file.replace(".json", "")
 				f = open(os.path.join(root,file))
@@ -46,6 +56,8 @@ def walk_dict(data, gsdkey):
 	for key,value in data.items():
 		if isinstance(value, str):
 			if str(key) == "url":
+				print (gsdkey + " " + value)
+			if str(key) == "repo":
 				print (gsdkey + " " + value)
 		if isinstance(value, dict):
 			walk_dict(value, gsdkey)
