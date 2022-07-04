@@ -56,16 +56,16 @@ def walk_dict(data, gsdkey):
 	for key,value in data.items():
 		if isinstance(value, str):
 			if str(key) == "url":
-				print (gsdkey + " " + value)
+				print (gsdkey + " url " + value)
 			if str(key) == "repo":
-				print (gsdkey + " " + value)
+				print (gsdkey + " repo " + value)
 		if isinstance(value, dict):
 			walk_dict(value, gsdkey)
 		elif isinstance(value, list):
 			for val in value:
 				if isinstance(val, str):
 					if key == "references":
-						print(gsdkey + " " + val)
+						print(gsdkey + " references " + val)
 				elif isinstance(val, list):
 					pass
 				else:
