@@ -52,24 +52,24 @@ def write_data_to_json_file(json_data, filename):
 		json.dump(all_gsd_data, f, ensure_ascii=False, indent=2)
 
 # TODO: what happens if it's not a dict/list/str? what about a boolean? or INT
-def walk_dict(data, gsdkey):
+def walk_dict(data, gsdkey, namespace):
 	for key,value in data.items():
 		if isinstance(value, str):
 			if str(key) == "url":
-				print (gsdkey + " url " + value)
+				print (gsdkey + " url " + namespace + " " + value)
 			if str(key) == "repo":
-				print (gsdkey + " repo " + value)
+				print (gsdkey + " repo " + namespace + " " + value)
 		if isinstance(value, dict):
-			walk_dict(value, gsdkey)
+			walk_dict(value, gsdkey, namespace)
 		elif isinstance(value, list):
 			for val in value:
 				if isinstance(val, str):
 					if key == "references":
-						print(gsdkey + " references " + val)
+						print(gsdkey + " references " + namespace + " " + val)
 				elif isinstance(val, list):
 					pass
 				else:
-					walk_dict(val, gsdkey)
+					walk_dict(val, gsdkey, namespace)
 
 
 
@@ -84,12 +84,12 @@ def process_gsd_data(data):
 		# Layer two: GSD/OSV/namespaces
 		for rootkey,rootvalue in gsdvalue.items():
 			if rootkey == "GSD":
-				walk_dict(rootvalue, gsdkey)
+				walk_dict(rootvalue, gsdkey, "GSD")
 			elif rootkey == "OSV":
-				walk_dict(rootvalue, gsdkey)
+				walk_dict(rootvalue, gsdkey, "OSV")
 			elif rootkey == "namespaces":
 				for namespacekey,namespacevalue in rootvalue.items():
-					walk_dict(namespacevalue, gsdkey)
+					walk_dict(namespacevalue, gsdkey, namespacekey)
 			elif rootkey == "overlay":
 				# ignore for now
 				continue
@@ -139,10 +139,10 @@ def process_gsd_data(data):
 ######################
 
 # Load all GSD files into a large dict in memory
-##all_gsd_data = load_gsd_files_into_memory(filesystem_path)
+#all_gsd_data = load_gsd_files_into_memory(filesystem_path)
 
 # Write the GSD file data dict into a single huge file
-##write_data_to_json_file(all_gsd_data, gsd_mega_file_name)
+#write_data_to_json_file(all_gsd_data, gsd_mega_file_name)
 
 # Load the mega GSD file into a large dict in memory
 all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
