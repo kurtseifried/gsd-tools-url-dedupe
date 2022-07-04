@@ -9,6 +9,8 @@ import re
 import json
 import validators
 # pip3 install validators
+import tldextract
+# pip3 install tldextract
 
 # This only works when run from the gsd-database directory
 filesystem_path = "./"
@@ -57,9 +59,13 @@ def walk_dict(data, gsdkey):
 				else:
 					walk_dict(val, gsdkey)
 
-# To check for urls lets use the validators
-# pip3 install validators
 
+
+# walk gsd mega files
+# 1) dict, first keys are GSD ids
+# 2) GSD ID dict keys: GSD, OSV, namespaces
+# 3) namespaces dict
+# 4) walk each namespace with the walk_dict
 def process_gsd_data(data):
 	# Layer one: GSD entries
 	for gsdkey,gsdvalue in data.items():
@@ -79,12 +85,40 @@ def process_gsd_data(data):
 				# print an error
 				print("ERROR, UNKNOWN DATA FOUND: " + gsdkey + " " + rootkey )
 
+# Data structure:
+#{TLD:
+#	SUBDOMAIN:
+#			URLPATH:
+#					PROTOCOL
+#							valid url: yes/no?
+#							totalcount:INT
+#							GSD-ID:
+#									count:INT
+#									namespace:
+#											name:count:INT
 
-# walk gsd mega files
-# 1) dict, first keys are GSD ids
-# 2) GSD ID dict keys: GSD, OSV, namespaces
-# 3) namespaces dict
-# 4) walk each namespace with the walk_dict
+## url uniqueness
+## TLD uniqueness
+## count of urls in that TLD
+## count of times that url is seen, how many GSDs
+## who sees that data (which namespace)
+## does archive.org have it?
+
+
+
+
+## Validate URL - basic correctness (mistyped entries/etc)
+# To check for urls lets use the validators
+# pip3 install validators
+
+
+## Validate DNS is live
+# FUTURE FEATURE: do dns lookups, have a cache
+
+## MIRROR URL
+# FUTURE FEATURE: mirror URL and headers
+
+
 
 # "url": str
 # "references": list
