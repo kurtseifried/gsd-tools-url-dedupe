@@ -47,11 +47,19 @@ def load_gsd_megafile_into_memory(filename):
 
 
 def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value):
-	# Check if url is correctly formatted
-	if validators.url(url_value) == True:
-		print("output handler: " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value))
+	# Get TLD (domain + suffix), if it's not valid suffix will be a null str
+	# (domain_info.subdomain, domain_info.domain, domain_info.suffix)
+	domain_info = tldextract.extract(url_value)
+	# Error out if the TLD is malformed
+	if domain_info.suffix == "":
+		print("ERROR: bad tld " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value) + " " + domain_info.domain  + "." + domain_info.suffix)
+	# TLD is ok, check url
 	else:
-		print("ERROR handler: " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value))
+		# Check if url is correctly formatted
+		if validators.url(url_value) == True:
+			print("output handler: " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value) +  " " + domain_info.domain  + "." + domain_info.suffix)
+		else:
+			print("ERROR bad url format: " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value) +  " " + domain_info.domain  + "." + domain_info.suffix)
 
 
 def write_data_to_json_file(json_data, filename):
