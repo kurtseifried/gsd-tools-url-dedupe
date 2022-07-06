@@ -8,6 +8,7 @@ import os
 import re
 import json
 import csv
+from pathlib import Path
 
 import validators
 # pip3 install validators
@@ -193,6 +194,16 @@ def process_gsd_data(data):
 
 ######################
 
+#
+# Check if the data file exists, if not create it
+#
+path = Path(gsd_mega_file_name)
+
+if path.is_file() is False:
+	all_gsd_data = load_gsd_files_into_memory(filesystem_path)
+	write_data_to_json_file(all_gsd_data, gsd_mega_file_name)
+
+	
 # Load all GSD files into a large dict in memory
 #all_gsd_data = load_gsd_files_into_memory(filesystem_path)
 
