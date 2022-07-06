@@ -114,8 +114,12 @@ def walk_dict(data, gsdkey, namespace):
 				if isinstance(val, str):
 					if key == "references":
 						# It's a list so we need to walk it
+						# the list might be a dict and not just entries. ### TODO
 						for url_entry in value:
-							handle_gsd_output(gsdkey, "references", namespace, url_entry)
+							if type(url_entry) == str:
+								handle_gsd_output(gsdkey, "references", namespace, url_entry)
+							else:
+								walk_dict(url_entry, gsdkey, namespace)
 				elif isinstance(val, list):
 					pass
 				else:
