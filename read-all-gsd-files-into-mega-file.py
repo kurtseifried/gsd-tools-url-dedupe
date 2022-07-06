@@ -7,6 +7,8 @@
 import os
 import re
 import json
+import csv
+
 import validators
 # pip3 install validators
 import tldextract
@@ -45,11 +47,29 @@ def load_gsd_megafile_into_memory(filename):
 	f.close()
 	return gsd_data
 
+def open_csv_output_file():
+	#
+	# open file and leave open
+	#
+	global csv_writer
+	CSV_file_path = "GSD-all-links.csv"
+	csv_file = open(CSV_file_path, 'w', encoding='UTF8')
+	# create the csv writer
+	csv_writer = csv.writer(csv_file)
+	header = ['gsd_id_value', 'data_type_value', 'namespace_value', 'status_message', 'url_value', 'domain_name']
+	csv_writer.writerow(header)
+	#
+
+
 
 def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value):
 	# Get TLD (domain + suffix), if it's not valid suffix will be a null str
 	# (domain_info.subdomain, domain_info.domain, domain_info.suffix)
-	domain_info = tldextract.extract(url_value)
+	if type(url_value) == str:
+		domain_info = tldextract.extract(url_value)
+	else:
+		domain_info = tldextract.extract("")
+		print("ERROR: " + gsd_id_value + " " + str(url_value))
 	# Error out if the TLD is malformed
 	if domain_info.suffix == "":
 		status_message = "ERROR: bad tld"
@@ -60,7 +80,19 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 			status_message = "Good link"
 		else:
 			status_message = "ERROR: possible bad url format"
-	print(str(status_message)+ " " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value) + " " + domain_info.domain  + "." + domain_info.suffix)
+	#
+	# CSV output
+	#
+	domain_name = domain_info.domain  + "." + domain_info.suffix
+	data_entry = [gsd_id_value, data_type_value, namespace_value, status_message, url_value, domain_name]
+	csv_writer.writerow(data_entry)
+	#
+	# We can print the output
+	#
+#	print(str(status_message)+ " " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value) + " " + domain_info.domain  + "." + domain_info.suffix)
+
+
+
 
 def write_data_to_json_file(json_data, filename):
 	# Raw file, the whole thing
@@ -164,8 +196,9 @@ def process_gsd_data(data):
 #write_data_to_json_file(all_gsd_data, gsd_mega_file_name)
 
 # Load the mega GSD file into a large dict in memory
-all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
 #
+all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
+open_csv_output_file()
 process_gsd_data(all_gsd_data)
 
 #
