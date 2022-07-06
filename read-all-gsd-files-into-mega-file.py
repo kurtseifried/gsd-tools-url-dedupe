@@ -52,15 +52,15 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 	domain_info = tldextract.extract(url_value)
 	# Error out if the TLD is malformed
 	if domain_info.suffix == "":
-		print("ERROR: bad tld " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value) + " " + domain_info.domain  + "." + domain_info.suffix)
+		status_message = "ERROR: bad tld"
 	# TLD is ok, check url
 	else:
 		# Check if url is correctly formatted
 		if validators.url(url_value) == True:
-			print("output handler: " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value) +  " " + domain_info.domain  + "." + domain_info.suffix)
+			status_message = "Good link"
 		else:
-			print("ERROR bad url format: " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value) +  " " + domain_info.domain  + "." + domain_info.suffix)
-
+			status_message = "ERROR: possible bad url format"
+	print(str(status_message)+ " " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value) + " " + domain_info.domain  + "." + domain_info.suffix)
 
 def write_data_to_json_file(json_data, filename):
 	# Raw file, the whole thing
@@ -113,7 +113,7 @@ def process_gsd_data(data):
 				continue
 			else:
 				# print an error
-				handle_gsd_output(gsdkey, "ERROR", namespace, value)
+				handle_gsd_output(gsdkey, "ERROR: unknown format", namespace, value)
 				#print("ERROR, UNKNOWN DATA FOUND: " + gsdkey + " " + rootkey )
 
 # Data structure:
@@ -165,7 +165,7 @@ def process_gsd_data(data):
 
 # Load the mega GSD file into a large dict in memory
 all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
-
+#
 process_gsd_data(all_gsd_data)
 
 #
