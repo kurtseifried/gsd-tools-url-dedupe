@@ -126,6 +126,24 @@ def walk_dict(data, gsdkey, namespace):
 				else:
 					walk_dict(val, gsdkey, namespace)
 
+# JSON	Python
+# object	dict
+# array	list
+# string	str
+# number (int)	int
+# number (real)	float
+# true	True
+# false	False
+# null	None
+
+# All data types can be empty, e.g. {}, [], "", etc.
+
+# Always pass the key value in, e.g. key: thing, first item, key is null?
+# Pass the key e.g. key:value, or key:[value1, [sublist]]
+# If key is NULL vs blank?
+
+# To process namespaces we can't make any assumptions about formats.
+
 
 
 # walk gsd mega files
@@ -203,7 +221,7 @@ if path.is_file() is False:
 	all_gsd_data = load_gsd_files_into_memory(filesystem_path)
 	write_data_to_json_file(all_gsd_data, gsd_mega_file_name)
 
-	
+
 # Load all GSD files into a large dict in memory
 #all_gsd_data = load_gsd_files_into_memory(filesystem_path)
 
@@ -212,9 +230,54 @@ if path.is_file() is False:
 
 # Load the mega GSD file into a large dict in memory
 #
+#all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
+#open_csv_output_file()
+#process_gsd_data(all_gsd_data)
+
+
+# What if we make key a list of keys.... how to add, easy, how to remove???? how deep...
+
+def process_gsd_mega_file_content():
+	print("processes a mega GSD file")
+
+def process_gsd_file_content():
+	print("processes a single GSD file")
+
+def process_json_object(input_json_item, key_name, key_list):
+	# Take an item and a key, on passing the root object pass a null key ""
+	# A series of isinstances and then call the processor
+	if type(input_json_item) is dict:
+		if input_json_item:
+			for key, value in input_json_item.items():
+				# Set a new key_name since it's a dict and we have a key:value
+				key_name = key
+				process_json_object(value, key_name, key_list)
+	elif type(input_json_item) is list:
+		# If empty just ignore I guess
+		if input_json_item:
+			for value in input_json_item:
+				process_json_object(value, key_name, key_list)
+	elif type(input_json_item) is str:
+		if input_json_item == "url" OR "urls" OR "repo" OR "references" OR "advisory" OR "defect" OR "refsource":
+			print("got to a string, key: " + str(key_name) + " value: " + str(input_json_item))
+		if input_json_item == "value":
+			# might be a URL, check with validator.url?
+			print("got to a string, key: " + str(key_name) + " value: " + str(input_json_item))
+	elif type(input_json_item) is bool:
+		print("got to a bool, key: " + str(key_name) + " value: " + str(input_json_item))
+	elif isinstance(input_json_item, int):
+		print("got to a int, key: " + str(key_name) + " value: " + str(input_json_item))
+	elif isinstance(input_json_item, float):
+		print("got to a float, key: " + str(key_name) + " value: " + str(input_json_item))
+	elif isinstance(input_json_item, NoneType):
+		print("got to a None, key: " + str(key_name) + " value: " + str(input_json_item))
+	else:
+		print("ERROR: unknown, key: " + str(key_name) + " value: " + str(input_json_item))
+
 all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
-open_csv_output_file()
-process_gsd_data(all_gsd_data)
+#open_csv_output_file()
+#process_gsd_data(all_gsd_data)
+process_json_object(all_gsd_data, "")
 
 #
 # count should always be 1 but in case it isn't let's explicitly count it
