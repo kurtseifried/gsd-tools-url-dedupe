@@ -29,6 +29,10 @@ filesystem_path = "./"
 gsd_mega_file_name = "GSD-mega-file.json"
 
 def load_gsd_files_into_memory(path):
+	#
+	# This walks the filesystem and loads all the GSD filesystem
+	# TODO: better regex on filenames/etc. GSD-YEAR-INT.json?
+	#
 	gsd_data = {}
 	for root, dirs, files in os.walk(path):
 		for file in files:
@@ -42,6 +46,9 @@ def load_gsd_files_into_memory(path):
 	return gsd_data
 
 def load_gsd_megafile_into_memory(filename):
+	#
+	# Given a filename to the massive JSON load it into memory
+	#
 	gsd_data = {}
 	f = open(filename)
 	gsd_data = json.load(f)
@@ -237,13 +244,38 @@ if path.is_file() is False:
 
 # What if we make key a list of keys.... how to add, easy, how to remove???? how deep...
 
-def process_gsd_mega_file_content():
-	print("processes a mega GSD file")
 
-def process_gsd_file_content():
-	print("processes a single GSD file")
+def process_gsd_megafile(data):
+	#
+	# Process a single GSD entry (JSON data loaded into memory)
+	#
+	for key,value in data.items():
+		gsd_id = key
+		gsd_data = value
+		process_gsd_entry(gsd_id, gsd_data)
+
+def process_gsd_entry(gsd_id, gsd_data):
+	#
+	# Process a single GSD entry (JSON data loaded into memory)
+	#
+	for key,value in gsd_data.items():
+		if key == "OSV":
+			print("Found OSV data")
+		elif key == "GSD":
+			print("Found GSD data")
+		elif key == "namespaces":
+			print("Found namespaces data")
+		elif key == "overlay":
+			print("Found overlay data")
+		else:
+			print("ERROR, UNKNOWN ROOT LEVEL OBJECT IN JSON")
+			print(key)
+			quit()
 
 def process_json_object(input_json_item, key_name, key_list):
+	if key_list is not list:
+		print("ERROR: key_list is not a list")
+		quit()
 	# Take an item and a key, on passing the root object pass a null key ""
 	# A series of isinstances and then call the processor
 	if type(input_json_item) is dict:
@@ -258,7 +290,7 @@ def process_json_object(input_json_item, key_name, key_list):
 			for value in input_json_item:
 				process_json_object(value, key_name, key_list)
 	elif type(input_json_item) is str:
-		if input_json_item == "url" OR "urls" OR "repo" OR "references" OR "advisory" OR "defect" OR "refsource":
+		if input_json_item == "url" or "urls" or "repo" or "references" or "advisory" or "defect" or "refsource":
 			print("got to a string, key: " + str(key_name) + " value: " + str(input_json_item))
 		if input_json_item == "value":
 			# might be a URL, check with validator.url?
@@ -275,9 +307,10 @@ def process_json_object(input_json_item, key_name, key_list):
 		print("ERROR: unknown, key: " + str(key_name) + " value: " + str(input_json_item))
 
 all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
+
 #open_csv_output_file()
 #process_gsd_data(all_gsd_data)
-process_json_object(all_gsd_data, "")
+process_gsd_megafile(all_gsd_data)
 
 #
 # count should always be 1 but in case it isn't let's explicitly count it
