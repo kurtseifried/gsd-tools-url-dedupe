@@ -14,6 +14,8 @@ import validators
 # pip3 install validators
 import tldextract
 # pip3 install tldextract
+import jsonschema
+# pip3 install jsonschema
 
 #### Options
 #
@@ -244,6 +246,27 @@ if path.is_file() is False:
 
 # What if we make key a list of keys.... how to add, easy, how to remove???? how deep...
 
+def load_json_schema_OSV():
+	# Load this into a global so we only do it once
+	OSV_schema_file = "OSV-2022-04-schema.json"
+	global global_OSV_schema_data
+	f = open(OSV_schema_file)
+	global_OSV_schema_data = json.load(f)
+	f.close
+
+	# https://raw.githubusercontent.com/ossf/osv-schema/main/validation/schema.json
+
+def validate_json_schema_OSV(OSV_data):
+	# Validate against the global OSV_schema_data
+    try:
+        jsonschema.validate(instance=OSV_data, schema=global_OSV_schema_data)
+    except jsonschema.exceptions.ValidationError as err:
+        print(err)
+        err = "Given OSV JSON data is invalid OSV format"
+        return False, err
+
+    message = "Given OSV JSON data is valid"
+    return True, message
 
 def process_gsd_megafile(data):
 	#
@@ -261,6 +284,9 @@ def process_gsd_entry(gsd_id, gsd_data):
 	for key,value in gsd_data.items():
 		if key == "OSV":
 			print("Found OSV data")
+			# validate it
+			#is_valid, msg = validate_json_schema_OSV(value)
+			#print(msg)
 		elif key == "GSD":
 			print("Found GSD data")
 		elif key == "namespaces":
@@ -306,10 +332,19 @@ def process_json_object(input_json_item, key_name, key_list):
 	else:
 		print("ERROR: unknown, key: " + str(key_name) + " value: " + str(input_json_item))
 
+
+
+
+
+
+load_json_schema_OSV()
+
+########
 all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
 
 #open_csv_output_file()
 #process_gsd_data(all_gsd_data)
+###########
 process_gsd_megafile(all_gsd_data)
 
 #
