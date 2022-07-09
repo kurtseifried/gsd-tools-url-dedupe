@@ -9,9 +9,8 @@ import re
 import json
 import csv
 from pathlib import Path
+import re
 
-import validators
-# pip3 install validators
 import tldextract
 # pip3 install tldextract
 import jsonschema
@@ -85,7 +84,7 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 	# TLD is ok, check url
 	else:
 		# Check if url is correctly formatted
-		if validators.url(url_value) == True:
+		if re.match("^(ftp|http|https)://", url_value.lower()):
 			status_message = "Good link"
 		else:
 			status_message = "ERROR: possible bad url format"
@@ -180,12 +179,6 @@ def process_gsd_data(data):
 ## who sees that data (which namespace)
 ## does archive.org have it?
 
-
-
-
-## Validate URL - basic correctness (mistyped entries/etc)
-# To check for urls lets use the validators
-# pip3 install validators
 
 
 ## Validate DNS is live
@@ -309,7 +302,17 @@ def process_json_object(input_json_item, key_name, key_list):
 				for value in input_json_item:
 					process_json_object(value, key_name, key_list)
 	elif type(input_json_item) is str:
-		print(key_name + " " + input_json_item + " " + str(key_list))
+		last_key = key_list[-1]
+		search_words = ["defect", "references", "repo", "url", "urls"]
+		# defect is 282 out of 13592 entries are URLs so worth grabbing
+		# advisory should never be a URL but there is one in CVE-2017-14798
+		# refsource should never be a URL but there is one in CVE-2018-15177 in the NVD data)
+		if last_key in search_words:
+			#
+			# Check for basic url format first, lower case it, and simply match.
+			#
+			if re.match("^(ftp|http|https)://", input_json_item.lower()):
+				print(key_name + " " + input_json_item + " " + url_status_message + " " + str(key_list))
 	else:
 		#
 		# Ignore ints/floats/bools for now, hopefully no error slip through.
