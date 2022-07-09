@@ -312,7 +312,7 @@ def process_json_object(input_json_item, key_name, key_list):
 			# Check for basic url format first, lower case it, and simply match.
 			#
 			if re.match("^(ftp|http|https)://", input_json_item.lower()):
-				print(key_name + " " + input_json_item + " " + url_status_message + " " + str(key_list))
+				print(key_name + " " + input_json_item + " " + str(key_list))
 	else:
 		#
 		# Ignore ints/floats/bools for now, hopefully no error slip through.
