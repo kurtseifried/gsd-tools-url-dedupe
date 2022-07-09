@@ -30,6 +30,7 @@ import jsonschema
 filesystem_path = "./"
 gsd_mega_file_name = "GSD-mega-file.json"
 
+
 def load_gsd_files_into_memory(path):
 	#
 	# This walks the filesystem and loads all the GSD filesystem
@@ -70,8 +71,6 @@ def open_csv_output_file():
 	csv_writer.writerow(header)
 	#
 
-
-
 def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value):
 	# Get TLD (domain + suffix), if it's not valid suffix will be a null str
 	# (domain_info.subdomain, domain_info.domain, domain_info.suffix)
@@ -96,13 +95,6 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 	domain_name = domain_info.domain  + "." + domain_info.suffix
 	data_entry = [gsd_id_value, data_type_value, namespace_value, status_message, url_value, domain_name]
 	csv_writer.writerow(data_entry)
-	#
-	# We can print the output
-	#
-#	print(str(status_message)+ " " + str(gsd_id_value) + " " + str(data_type_value) + " " + str(namespace_value) + " " + str(url_value) + " " + domain_info.domain  + "." + domain_info.suffix)
-
-
-
 
 def write_data_to_json_file(json_data, filename):
 	# Raw file, the whole thing
@@ -135,17 +127,6 @@ def walk_dict(data, gsdkey, namespace):
 				else:
 					walk_dict(val, gsdkey, namespace)
 
-# JSON	Python
-# object	dict
-# array	list
-# string	str
-# number (int)	int
-# number (real)	float
-# true	True
-# false	False
-# null	None
-
-# All data types can be empty, e.g. {}, [], "", etc.
 
 # Always pass the key value in, e.g. key: thing, first item, key is null?
 # Pass the key e.g. key:value, or key:[value1, [sublist]]
@@ -213,11 +194,8 @@ def process_gsd_data(data):
 ## MIRROR URL
 # FUTURE FEATURE: mirror URL and headers
 
-
-
 # "url": str
 # "references": list
-
 
 ######################
 
@@ -278,66 +256,70 @@ def process_gsd_megafile(data):
 		process_gsd_entry(gsd_id, gsd_data)
 
 def process_gsd_entry(gsd_id, gsd_data):
+	key_list = []
 	#
 	# Process a single GSD entry (JSON data loaded into memory)
 	#
 	for key,value in gsd_data.items():
 		if key == "OSV":
-			print("Found OSV data")
 			# validate it
 			#is_valid, msg = validate_json_schema_OSV(value)
 			#print(msg)
+			key_list.append("OSV")
+			process_json_object(value, gsd_id, key_list)
 		elif key == "GSD":
-			print("Found GSD data")
+			key_list.append("GSD")
+			process_json_object(value, gsd_id, key_list)
 		elif key == "namespaces":
-			print("Found namespaces data")
+			key_list.append("namespaces")
+			process_json_object(value, gsd_id, key_list)
 		elif key == "overlay":
-			print("Found overlay data")
+			key_list.append("overlay")
+			process_json_object(value, gsd_id, key_list)
 		else:
 			print("ERROR, UNKNOWN ROOT LEVEL OBJECT IN JSON")
 			print(key)
 			quit()
 
+#
+# get a json object, dict/list, values
+#
 def process_json_object(input_json_item, key_name, key_list):
-	if key_list is not list:
-		print("ERROR: key_list is not a list")
+	if type(key_list) is not list:
+		print(key_name)
 		quit()
 	# Take an item and a key, on passing the root object pass a null key ""
 	# A series of isinstances and then call the processor
 	if type(input_json_item) is dict:
 		if input_json_item:
 			for key, value in input_json_item.items():
+				#
+				# first set the key_list
+				#
+				key_list.append(key)
+				process_json_object(value, key_name, key_list)
 				# Set a new key_name since it's a dict and we have a key:value
-				key_name = key
-				process_json_object(value, key_name, key_list)
+				key_list.pop()
+		else:
+			pass
 	elif type(input_json_item) is list:
-		# If empty just ignore I guess
 		if input_json_item:
-			for value in input_json_item:
-				process_json_object(value, key_name, key_list)
+			# If empty just ignore I guess
+			if input_json_item:
+				for value in input_json_item:
+					process_json_object(value, key_name, key_list)
 	elif type(input_json_item) is str:
-		if input_json_item == "url" or "urls" or "repo" or "references" or "advisory" or "defect" or "refsource":
-			print("got to a string, key: " + str(key_name) + " value: " + str(input_json_item))
-		if input_json_item == "value":
-			# might be a URL, check with validator.url?
-			print("got to a string, key: " + str(key_name) + " value: " + str(input_json_item))
-	elif type(input_json_item) is bool:
-		print("got to a bool, key: " + str(key_name) + " value: " + str(input_json_item))
-	elif isinstance(input_json_item, int):
-		print("got to a int, key: " + str(key_name) + " value: " + str(input_json_item))
-	elif isinstance(input_json_item, float):
-		print("got to a float, key: " + str(key_name) + " value: " + str(input_json_item))
-	elif isinstance(input_json_item, NoneType):
-		print("got to a None, key: " + str(key_name) + " value: " + str(input_json_item))
+		print(key_name + " " + input_json_item + " " + str(key_list))
 	else:
-		print("ERROR: unknown, key: " + str(key_name) + " value: " + str(input_json_item))
+		#
+		# Ignore ints/floats/bools for now, hopefully no error slip through.
+		#
+		pass
 
-
-
-
-
-
-load_json_schema_OSV()
+#
+# If we check schema load it into memory once
+#
+#load_json_schema_OSV()
 
 ########
 all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
