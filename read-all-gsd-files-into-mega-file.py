@@ -68,7 +68,7 @@ def open_csv_output_file():
 	csv_writer = csv.writer(csv_file)
 	header = ['gsd_id_value', 'data_type_value', 'namespace_value', 'status_message', 'url_value', 'domain_name']
 	csv_writer.writerow(header)
-	#
+
 
 def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value):
 	# Get TLD (domain + suffix), if it's not valid suffix will be a null str
@@ -82,12 +82,7 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 	if domain_info.suffix == "":
 		status_message = "ERROR: bad tld"
 	# TLD is ok, check url
-	else:
-		# Check if url is correctly formatted
-		if re.match("^(ftp|http|https)://", url_value.lower()):
-			status_message = "Good link"
-		else:
-			status_message = "ERROR: possible bad url format"
+	status_message = "OK"
 	#
 	# CSV output
 	#
@@ -96,35 +91,11 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 	csv_writer.writerow(data_entry)
 
 def write_data_to_json_file(json_data, filename):
+	# indent = 2, it saves a lot of space as per Josh
 	# Raw file, the whole thing
 	with open(filename, 'w', encoding='utf-8') as f:
 		json.dump(all_gsd_data, f, ensure_ascii=False, indent=2)
 
-# TODO: what happens if it's not a dict/list/str? what about a boolean? or INT
-def walk_dict(data, gsdkey, namespace):
-	for key,value in data.items():
-		if isinstance(value, str):
-			if str(key) == "url":
-				handle_gsd_output(gsdkey, "url", namespace, value)
-			if str(key) == "repo":
-				handle_gsd_output(gsdkey, "repo", namespace, value)
-		if isinstance(value, dict):
-			walk_dict(value, gsdkey, namespace)
-		elif isinstance(value, list):
-			for val in value:
-				if isinstance(val, str):
-					if key == "references":
-						# It's a list so we need to walk it
-						# the list might be a dict and not just entries. ### TODO
-						for url_entry in value:
-							if type(url_entry) == str:
-								handle_gsd_output(gsdkey, "references", namespace, url_entry)
-							else:
-								walk_dict(url_entry, gsdkey, namespace)
-				elif isinstance(val, list):
-					pass
-				else:
-					walk_dict(val, gsdkey, namespace)
 
 
 # Always pass the key value in, e.g. key: thing, first item, key is null?
@@ -135,30 +106,7 @@ def walk_dict(data, gsdkey, namespace):
 
 
 
-# walk gsd mega files
-# 1) dict, first keys are GSD ids
-# 2) GSD ID dict keys: GSD, OSV, namespaces
-# 3) namespaces dict
-# 4) walk each namespace with the walk_dict
-def process_gsd_data(data):
-	# Layer one: GSD entries
-	for gsdkey,gsdvalue in data.items():
-		# Layer two: GSD/OSV/namespaces
-		for rootkey,rootvalue in gsdvalue.items():
-			if rootkey == "GSD":
-				walk_dict(rootvalue, gsdkey, "GSD")
-			elif rootkey == "OSV":
-				walk_dict(rootvalue, gsdkey, "OSV")
-			elif rootkey == "namespaces":
-				for namespacekey,namespacevalue in rootvalue.items():
-					walk_dict(namespacevalue, gsdkey, namespacekey)
-			elif rootkey == "overlay":
-				# ignore for now
-				continue
-			else:
-				# print an error
-				handle_gsd_output(gsdkey, "ERROR: unknown format", namespace, value)
-				#print("ERROR, UNKNOWN DATA FOUND: " + gsdkey + " " + rootkey )
+
 
 # Data structure:
 #{TLD:
@@ -273,6 +221,7 @@ def process_gsd_entry(gsd_id, gsd_data):
 			print("ERROR, UNKNOWN ROOT LEVEL OBJECT IN JSON")
 			print(key)
 			quit()
+		key_list.pop()
 
 #
 # get a json object, dict/list, values
@@ -312,7 +261,25 @@ def process_json_object(input_json_item, key_name, key_list):
 			# Check for basic url format first, lower case it, and simply match.
 			#
 			if re.match("^(ftp|http|https)://", input_json_item.lower()):
-				print(key_name + " " + input_json_item + " " + str(key_list))
+				if key_list[0] == "GSD" or "OSV":
+					handle_gsd_output(key_name, key_list[0], str(key_list), input_json_item)
+#					print(key_name + " " + input_json_item + " " + str(key_list))
+				elif key_list[0] == "namespaces":
+					# strip the first list item
+					key_list.pop(0)
+					handle_gsd_output(key_name, key_list[0], str(key_list), input_json_item)
+				elif key_list[0] == "overlay":
+					# remove the first two elements, POP POP!
+					key_list.pop(0)
+					key_list.pop(0)
+					handle_gsd_output(key_name, "overlay", str(key_list), input_json_item)
+				else:
+					print("UNKNOWN DATA ERROR!!!!!")
+			else:
+				#
+				# there are advisory ID's and whatnot en masse, so just ignore them
+				#
+				pass
 	else:
 		#
 		# Ignore ints/floats/bools for now, hopefully no error slip through.
@@ -324,13 +291,13 @@ def process_json_object(input_json_item, key_name, key_list):
 #
 #load_json_schema_OSV()
 
-########
 all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
 
-#open_csv_output_file()
-#process_gsd_data(all_gsd_data)
-###########
+open_csv_output_file()
+
 process_gsd_megafile(all_gsd_data)
+
+
 
 #
 # count should always be 1 but in case it isn't let's explicitly count it
