@@ -10,7 +10,11 @@ import json
 import csv
 from pathlib import Path
 import re
+import validators
+from urllib.parse import urlparse
 
+from IPy import IP
+# pip3 install IPy
 import tldextract
 # pip3 install tldextract
 import jsonschema
@@ -66,28 +70,34 @@ def open_csv_output_file():
 	csv_file = open(CSV_file_path, 'w', encoding='UTF8')
 	# create the csv writer
 	csv_writer = csv.writer(csv_file)
-	header = ['gsd_id_value', 'data_type_value', 'namespace_value', 'status_message', 'url_value', 'domain_name']
+	header = ['gsd_id_value', 'data_type_value', 'namespace_value', 'url_status_message', 'url_value', 'domain_name']
 	csv_writer.writerow(header)
 
 
 def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value):
+	url_status_message = "OK"
 	# Get TLD (domain + suffix), if it's not valid suffix will be a null str
 	# (domain_info.subdomain, domain_info.domain, domain_info.suffix)
-	if type(url_value) == str:
-		domain_info = tldextract.extract(url_value)
-	else:
-		domain_info = tldextract.extract("")
-		print("ERROR: " + gsd_id_value + " " + str(url_value))
+	domain_info = tldextract.extract(url_value)
+
 	# Error out if the TLD is malformed
 	if domain_info.suffix == "":
-		status_message = "ERROR: bad tld"
+		# CVE and others have links with bad TLD's e.g. "https://www.flightradar24.com.aa"
+		url_status_message = "URL_ERROR: bad TLD"
+		# Weed out IP addresses here? there are 13 links that are IP based in the dataset
+		if IP(str(domain_info.domain)) is True:
+			url_status_message = "URL_ERROR: IP Address"
+
 	# TLD is ok, check url
-	status_message = "OK"
+	if validators.url(url_value) is True:
+		pass
+	else:
+		url_status_message = "URL_ERROR: bad URL"
 	#
 	# CSV output
 	#
 	domain_name = domain_info.domain  + "." + domain_info.suffix
-	data_entry = [gsd_id_value, data_type_value, namespace_value, status_message, url_value, domain_name]
+	data_entry = [gsd_id_value, data_type_value, namespace_value, url_status_message, url_value, domain_name]
 	csv_writer.writerow(data_entry)
 
 def write_data_to_json_file(json_data, filename):
@@ -266,12 +276,12 @@ def process_json_object(input_json_item, key_name, key_list):
 #					print(key_name + " " + input_json_item + " " + str(key_list))
 				elif key_list[0] == "namespaces":
 					# strip the first list item
-					key_list.pop(0)
+					null_item = key_list.pop(0)
 					handle_gsd_output(key_name, key_list[0], str(key_list), input_json_item)
 				elif key_list[0] == "overlay":
 					# remove the first two elements, POP POP!
-					key_list.pop(0)
-					key_list.pop(0)
+					null_item = key_list.pop(0)
+					null_item = key_list.pop(0)
 					handle_gsd_output(key_name, "overlay", str(key_list), input_json_item)
 				else:
 					print("UNKNOWN DATA ERROR!!!!!")
