@@ -13,8 +13,6 @@ import re
 import validators
 from urllib.parse import urlparse
 
-from IPy import IP
-# pip3 install IPy
 import tldextract
 # pip3 install tldextract
 import jsonschema
@@ -85,7 +83,7 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 		# CVE and others have links with bad TLD's e.g. "https://www.flightradar24.com.aa"
 		url_status_message = "URL_ERROR: bad TLD"
 		# Weed out IP addresses here? there are 13 links that are IP based in the dataset
-		if IP(str(domain_info.domain)) is True:
+		if re.match("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+", domain_info.domain):
 			url_status_message = "URL_ERROR: IP Address"
 
 	# TLD is ok, check url
