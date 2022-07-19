@@ -11,7 +11,7 @@ import csv
 from pathlib import Path
 import re
 import validators
-from urllib.parse import urlparse
+import  urllib
 
 import tldextract
 # pip3 install tldextract
@@ -68,7 +68,7 @@ def open_csv_output_file():
 	csv_file = open(CSV_file_path, 'w', encoding='UTF8')
 	# create the csv writer
 	csv_writer = csv.writer(csv_file)
-	header = ['gsd_id_value', 'data_type_value', 'namespace_value', 'url_status_message', 'url_value', 'domain_name']
+	header = ['gsd_id_value', 'data_type_value', 'namespace_value', 'url_status_message', 'url_value', 'hostname', 'domain_name']
 	csv_writer.writerow(header)
 
 
@@ -76,14 +76,16 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 	url_status_message = "OK"
 	# Get TLD (domain + suffix), if it's not valid suffix will be a null str
 	# (domain_info.subdomain, domain_info.domain, domain_info.suffix)
-	domain_info = tldextract.extract(url_value)
+	parsed_url = urllib.parse.urlparse(url_value)
+
+	domain_info = tldextract.extract(parsed_url.netloc)
 
 	# Error out if the TLD is malformed
 	if domain_info.suffix == "":
 		# CVE and others have links with bad TLD's e.g. "https://www.flightradar24.com.aa"
 		url_status_message = "URL_ERROR: bad TLD"
 		# Weed out IP addresses here? there are 13 links that are IP based in the dataset
-		if re.match("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+", domain_info.domain):
+		if re.match("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+", parsed_url.netloc):
 			url_status_message = "URL_ERROR: IP Address"
 
 	# TLD is ok, check url
@@ -94,8 +96,10 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 	#
 	# CSV output
 	#
+
+	hostname = parsed_url.netloc
 	domain_name = domain_info.domain  + "." + domain_info.suffix
-	data_entry = [gsd_id_value, data_type_value, namespace_value, url_status_message, url_value, domain_name]
+	data_entry = [gsd_id_value, data_type_value, namespace_value, url_status_message, url_value, hostname, domain_name]
 	csv_writer.writerow(data_entry)
 
 def write_data_to_json_file(json_data, filename):
@@ -114,19 +118,16 @@ def write_data_to_json_file(json_data, filename):
 
 
 
+# Read the CSV file and output a data/ directory with data/org/name/each-unique-hostname.json
+# within each directory
+# This makes searching for a URL easy, and splits the domains up into sub directories so it's not to crowded
 
+# The JSON data format is:
+# {URL1: {gsd_list: {GSD_ID: {OSV/GSD/namespace: {URL_DATA}}}, {meta_data: {GSD COUNT, chances of being a duplicate, etc.}}},
+#  URL2: {}...
+# }
+#
 
-# Data structure:
-#{TLD:
-#	SUBDOMAIN:
-#			URLPATH:
-#					PROTOCOL
-#							valid url: yes/no?
-#							totalcount:INT
-#							GSD-ID:
-#									count:INT
-#									namespace:
-#											name:count:INT
 
 ## url uniqueness
 ## TLD uniqueness
