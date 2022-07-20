@@ -17,6 +17,8 @@ import tldextract
 # pip3 install tldextract
 import jsonschema
 # pip3 install jsonschema
+from ipaddress import ip_address, IPv4Address
+# pip3 install ipaddress
 
 #### Options
 #
@@ -99,8 +101,11 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 
 	hostname = parsed_url.netloc
 	domain_name = domain_info.domain  + "." + domain_info.suffix
-	data_entry = [gsd_id_value, data_type_value, namespace_value, url_status_message, url_value, hostname, domain_name]
-	csv_writer.writerow(data_entry)
+
+	if write_output_to_csv == True:
+		data_entry = [gsd_id_value, data_type_value, namespace_value, url_status_message, url_value, hostname, domain_name]
+		csv_writer.writerow(data_entry)
+
 
 def write_data_to_json_file(json_data, filename):
 	# indent = 2, it saves a lot of space as per Josh
@@ -181,8 +186,38 @@ def load_json_schema_OSV():
 	f = open(OSV_schema_file)
 	global_OSV_schema_data = json.load(f)
 	f.close
-
 	# https://raw.githubusercontent.com/ossf/osv-schema/main/validation/schema.json
+
+
+def classify_url_hostname_type(IP: str) -> str:
+    try:
+        return "ipv4" if type(ip_address(IP)) is IPv4Address else "ipv6"
+    except ValueError:
+        return "dns"
+
+def make_data_dedupe_file(hostname, data):
+	hostname_type=classify_url_hostname_type(hostname)
+	if hostname_type == "ipv4":
+		pass
+		# mkdir a/b/c/d/
+		# touch a/b/c/d/a.b.c.d.json
+		# Write data to file
+	elif hostname_type == "dns":
+		pass
+		# mkdir tld/domain/whatever/
+		# touch whatever.domain.tld.json
+		# Write data to file
+
+
+	# creates a blank file if it doesn't already exist
+	# Examples:
+	# dns/tld/name/tls.name.json
+	# ipv4/a/b/c/d/a.b.c.d.json
+	# ipv6/??????/ipv6.json
+	# Other address formats? Git? Blockchains?
+	# do we need to care about the protocol such as http/https/ftp/??? I don't think so.
+	return True
+
 
 def validate_json_schema_OSV(OSV_data):
 	# Validate against the global OSV_schema_data
@@ -300,12 +335,18 @@ def process_json_object(input_json_item, key_name, key_list):
 #
 #load_json_schema_OSV()
 
-all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
+###all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
 
-open_csv_output_file()
+#
+# Kurt likes CSV files for playing with the data
+#
+###open_csv_output_file()
+###write_output_to_csv = True
 
-process_gsd_megafile(all_gsd_data)
 
+###process_gsd_megafile(all_gsd_data)
+
+print(classify_url_hostname_type("wwww.com"))
 
 
 #
