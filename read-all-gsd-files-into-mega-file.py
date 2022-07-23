@@ -33,7 +33,7 @@ from ipaddress import ip_address, IPv4Address
 #
 filesystem_path = "./"
 gsd_mega_file_name = "GSD-mega-file.json"
-
+CSV_file_path = "GSD-all-links.csv"
 
 
 def load_gsd_files_into_memory(path):
@@ -68,7 +68,6 @@ def open_csv_output_file():
 	# open file and leave open
 	#
 	global csv_writer
-	CSV_file_path = "GSD-all-links.csv"
 	csv_file = open(CSV_file_path, 'w', encoding='UTF8')
 	# create the csv writer
 	csv_writer = csv.writer(csv_file)
@@ -337,29 +336,21 @@ if __name__ == "__main__":
 	#
 	# Check if the mega data file exists, if not create it and save it locally
 	#
-	path = Path(gsd_mega_file_name)
-
-	if path.is_file() is False:
+	if Path(gsd_mega_file_name).is_file() is False:
 		all_gsd_data = load_gsd_files_into_memory(filesystem_path)
 		write_data_to_json_file(all_gsd_data, gsd_mega_file_name)
 
+	#
+	# Kurt likes CSV files. This takes along time to generate though
+	#
+	if Path(CSV_file_path).is_file() is False:
+		all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
+		open_csv_output_file()
+		write_output_to_csv = True
+		process_gsd_megafile(all_gsd_data)
 
-	#
-	# If we check schema load it into memory once
-	#
-	#load_json_schema_OSV()
 
-	#
-	# Loading the GSD mega file is much faster than walking and loading 200k files
-	#
-	all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
-
-	#
-	# Kurt likes CSV files for playing with the data
-	#
-	open_csv_output_file()
-	write_output_to_csv = True
-	process_gsd_megafile(all_gsd_data)
+	#all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
 
 
 
