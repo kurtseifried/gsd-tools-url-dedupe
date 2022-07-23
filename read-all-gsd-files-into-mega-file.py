@@ -24,14 +24,16 @@ from ipaddress import ip_address, IPv4Address
 #
 # load-filesystem-path - path to gsd-database
 # load-file - file to load
-
 # output-file - file to write to
+
+
 #
-
-
-# This only works when run from the gsd-database directory
+# This script only works when run from the gsd-database directory, you'll want
+# to run it there, then copy the GSD-mega-file.json to wherever you're working on things
+#
 filesystem_path = "./"
 gsd_mega_file_name = "GSD-mega-file.json"
+
 
 
 def load_gsd_files_into_memory(path):
@@ -74,44 +76,6 @@ def open_csv_output_file():
 	csv_writer.writerow(header)
 
 
-def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value):
-	url_status_message = "OK"
-	# Get TLD (domain + suffix), if it's not valid suffix will be a null str
-	# (domain_info.subdomain, domain_info.domain, domain_info.suffix)
-	parsed_url = urllib.parse.urlparse(url_value)
-
-	domain_info = tldextract.extract(parsed_url.netloc)
-
-	# Error out if the TLD is malformed
-	if domain_info.suffix == "":
-		# CVE and others have links with bad TLD's e.g. "https://www.flightradar24.com.aa"
-		url_status_message = "URL_ERROR: bad TLD"
-		# Weed out IP addresses here? there are 13 links that are IP based in the dataset
-		if re.match("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+", parsed_url.netloc):
-			url_status_message = "URL_ERROR: IP Address"
-
-	# TLD is ok, check url
-	if validators.url(url_value) is True:
-		pass
-	else:
-		url_status_message = "URL_ERROR: bad URL"
-	#
-	# CSV output
-	#
-
-	hostname = parsed_url.netloc
-	domain_name = domain_info.domain  + "." + domain_info.suffix
-
-	if write_output_to_csv == True:
-		data_entry = [gsd_id_value, data_type_value, namespace_value, url_status_message, url_value, hostname, domain_name]
-		csv_writer.writerow(data_entry)
-
-
-def write_data_to_json_file(json_data, filename):
-	# indent = 2, it saves a lot of space as per Josh
-	# Raw file, the whole thing
-	with open(filename, 'w', encoding='utf-8') as f:
-		json.dump(all_gsd_data, f, ensure_ascii=False, indent=2)
 
 
 
@@ -154,14 +118,7 @@ def write_data_to_json_file(json_data, filename):
 
 ######################
 
-#
-# Check if the data file exists, if not create it
-#
-path = Path(gsd_mega_file_name)
 
-if path.is_file() is False:
-	all_gsd_data = load_gsd_files_into_memory(filesystem_path)
-	write_data_to_json_file(all_gsd_data, gsd_mega_file_name)
 
 
 # Load all GSD files into a large dict in memory
@@ -194,6 +151,10 @@ def classify_url_hostname_type(IP: str) -> str:
         return "ipv4" if type(ip_address(IP)) is IPv4Address else "ipv6"
     except ValueError:
         return "dns"
+
+
+
+
 
 def make_data_dedupe_file(hostname, data):
 	hostname_type=classify_url_hostname_type(hostname)
@@ -330,30 +291,84 @@ def process_json_object(input_json_item, key_name, key_list):
 		#
 		pass
 
-#
-# If we check schema load it into memory once
-#
-#load_json_schema_OSV()
 
-###all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
+def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value):
+	url_status_message = "OK"
+	# Get TLD (domain + suffix), if it's not valid suffix will be a null str
+	# (domain_info.subdomain, domain_info.domain, domain_info.suffix)
+	parsed_url = urllib.parse.urlparse(url_value)
 
-#
-# Kurt likes CSV files for playing with the data
-#
-###open_csv_output_file()
-###write_output_to_csv = True
+	domain_info = tldextract.extract(parsed_url.netloc)
+
+	# Error out if the TLD is malformed
+	if domain_info.suffix == "":
+		# CVE and others have links with bad TLD's e.g. "https://www.flightradar24.com.aa"
+		url_status_message = "URL_ERROR: bad TLD"
+		# Weed out IP addresses here? there are 13 links that are IP based in the dataset
+		if re.match("[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+", parsed_url.netloc):
+			url_status_message = "URL_ERROR: IP Address"
+
+	# TLD is ok, check url
+	if validators.url(url_value) is True:
+		pass
+	else:
+		url_status_message = "URL_ERROR: bad URL"
+	#
+	# CSV output
+	#
+
+	hostname = parsed_url.netloc
+	domain_name = domain_info.domain  + "." + domain_info.suffix
+
+	if write_output_to_csv == True:
+		data_entry = [gsd_id_value, data_type_value, namespace_value, url_status_message, url_value, hostname, domain_name]
+		csv_writer.writerow(data_entry)
 
 
-###process_gsd_megafile(all_gsd_data)
+def write_data_to_json_file(json_data, filename):
+	# indent = 2, it saves a lot of space as per Josh
+	# Raw file, the whole thing
+	with open(filename, 'w', encoding='utf-8') as f:
+		json.dump(all_gsd_data, f, ensure_ascii=False, indent=2)
 
-print(classify_url_hostname_type("wwww.com"))
+
+if __name__ == "__main__":
+
+	#
+	# Check if the mega data file exists, if not create it and save it locally
+	#
+	path = Path(gsd_mega_file_name)
+
+	if path.is_file() is False:
+		all_gsd_data = load_gsd_files_into_memory(filesystem_path)
+		write_data_to_json_file(all_gsd_data, gsd_mega_file_name)
 
 
-#
-# count should always be 1 but in case it isn't let's explicitly count it
+	#
+	# If we check schema load it into memory once
+	#
+	#load_json_schema_OSV()
 
-# Just the URLs JSON file:
-# {GSD {namespace {references/repo {list of urls: count}}}}
+	#
+	# Loading the GSD mega file is much faster than walking and loading 200k files
+	#
+	all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
 
-# CSV file (escaped excel format):
-# GSD,namespace,reference/repo,url,domain,path,count
+	#
+	# Kurt likes CSV files for playing with the data
+	#
+	open_csv_output_file()
+	write_output_to_csv = True
+	process_gsd_megafile(all_gsd_data)
+
+
+
+
+	#
+	# count should always be 1 but in case it isn't let's explicitly count it
+
+	# Just the URLs JSON file:
+	# {GSD {namespace {references/repo {list of urls: count}}}}
+
+	# CSV file (escaped excel format):
+	# GSD,namespace,reference/repo,url,domain,path,count
