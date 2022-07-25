@@ -329,13 +329,14 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 		if url_value in dedupe_data_struct:
 			tempvalue = dedupe_data_struct[url_value]["count"] + 1
 			dedupe_data_struct[url_value]["count"] = tempvalue
-			dedupe_data_struct[url_value]["GSDs"][gsd_id_value]=namespace_value
+			dedupe_data_struct[url_value]["GSDs"][gsd_id_value]=data_type_value
 			# TODO: clean up theh namespace_value data
+			# data_type_value = GSD/namespaces, we also need the namespace e.g. cve.org. need some logic to find this
 		else:
 			dedupe_data_struct[url_value]={}
 			dedupe_data_struct[url_value]["count"]=1
 			dedupe_data_struct[url_value]["GSDs"]={}
-			dedupe_data_struct[url_value]["GSDs"][gsd_id_value]=namespace_value
+			dedupe_data_struct[url_value]["GSDs"][gsd_id_value]=data_type_value
 			# TODO: clean up theh namespace_value data
 
 
