@@ -322,7 +322,29 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 	if write_output_to_csv == True:
 		data_entry = [gsd_id_value, data_type_value, namespace_value, url_status_message, url_value, hostname, domain_name]
 		csv_writer.writerow(data_entry)
+	if write_output_to_dedupe == True:
+		# First populate the data structure
+		# so creating keys if not exist, and if exist adding to the count and the list of GSDs with that URL
+		# then as a final step, write all the files?
+		if url_value in dedupe_data_struct:
+			tempvalue = dedupe_data_struct[url_value]["count"] + 1
+			dedupe_data_struct[url_value]["count"] = tempvalue
+			dedupe_data_struct[url_value]["GSDs"][gsd_id_value]=namespace_value
+			# TODO: clean up theh namespace_value data
+		else:
+			dedupe_data_struct[url_value]={}
+			dedupe_data_struct[url_value]["count"]=1
+			dedupe_data_struct[url_value]["GSDs"]={}
+			dedupe_data_struct[url_value]["GSDs"][gsd_id_value]=namespace_value
+			# TODO: clean up theh namespace_value data
 
+
+def write_dedupe_struct_to_files(data):
+	# This function assumes a "clean" working dir, it doesn't do updates, it just writes a blob of output.
+	# so mkdir -p and then make the file?
+	# It can also write the json data structure to a single mega file.
+	# TODO: GSD MEGA FIRST
+	print(dedupe_data_struct)
 
 def write_data_to_json_file(json_data, filename):
 	# indent = 2, it saves a lot of space as per Josh
@@ -350,8 +372,21 @@ if __name__ == "__main__":
 		process_gsd_megafile(all_gsd_data)
 
 
-	#all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
-
+	all_gsd_data = load_gsd_megafile_into_memory(gsd_mega_file_name)
+	#
+	# declare the data structure here
+	#
+	dedupe_data_struct = {}
+	#
+	# write to the dedupe_data_struct when processing all the data
+	#
+	write_output_to_csv = False
+	write_output_to_dedupe = True
+	process_gsd_megafile(all_gsd_data)
+	#
+	# Final step write the files, this will take a while
+	#
+	write_dedupe_struct_to_files(dedupe_data_struct)
 
 
 
