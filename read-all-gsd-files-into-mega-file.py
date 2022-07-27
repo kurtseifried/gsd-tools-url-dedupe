@@ -345,13 +345,14 @@ def write_dedupe_struct_to_files(data):
 	# so mkdir -p and then make the file?
 	# It can also write the json data structure to a single mega file.
 	# TODO: GSD MEGA FIRST
+
 	print(dedupe_data_struct)
 
 def write_data_to_json_file(json_data, filename):
 	# indent = 2, it saves a lot of space as per Josh
 	# Raw file, the whole thing
 	with open(filename, 'w', encoding='utf-8') as f:
-		json.dump(all_gsd_data, f, ensure_ascii=False, indent=2)
+		json.dump(json_data, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
@@ -387,8 +388,18 @@ if __name__ == "__main__":
 	#
 	# Final step write the files, this will take a while
 	#
-	write_dedupe_struct_to_files(dedupe_data_struct)
+	#write_dedupe_struct_to_files(dedupe_data_struct)
 
+	#
+	# Now we have populated dedupe_data_struct with urls and GSDs
+	# dedupe_data_struct[url_value]["GSDs"][gsd_id_value]
+	# dedupe_data_struct[url_value]["count"]=len(dedupe_data_struct[url_value]["GSDs"].keys)
+	for urlkey, urldata in dedupe_data_struct.items():
+		urldata["count"]=len(urldata["GSDs"])
+
+	#write_dedupe_struct_to_files(dedupe_data_struct)
+
+	write_data_to_json_file(dedupe_data_struct, "dedupe.json")
 
 
 	#
