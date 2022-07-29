@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+# NOTES ON MATCHING DUPLICATES
+
+# Some URLs are 100% duplicate if they occur in multiple GSD's, and osme are 100% not (e.g. repo URL for linux kernel)
+# I suspect git commit ID's should be unique, they typically solve one security problem, but can solve more than one.
+# I don't know yet if we'll see same git commit ID collisions across projects, collisions should be rare, can be human checked
+# So after URL parsing we'll focus on git commit id matching.
+
+# TODO: Split this file up a bit long term. we want this file for creating the data filesystem
+# TODO: we want a separate file for processing and scoring them.
+
 # Reading all 250k files into an array takes about 3 minutes.
 # Reading them all from a single file takes about 40 seconds
 # So if you're doing testing/dev this saves quite a bit of time
