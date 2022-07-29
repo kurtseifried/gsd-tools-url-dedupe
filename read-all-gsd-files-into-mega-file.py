@@ -322,22 +322,26 @@ def handle_gsd_output(gsd_id_value, data_type_value, namespace_value, url_value)
 	if write_output_to_csv == True:
 		data_entry = [gsd_id_value, data_type_value, namespace_value, url_status_message, url_value, hostname, domain_name]
 		csv_writer.writerow(data_entry)
+
 	if write_output_to_dedupe == True:
 		# First populate the data structure
 		# so creating keys if not exist, and if exist adding to the count and the list of GSDs with that URL
 		# then as a final step, write all the files?
 		if url_value in dedupe_data_struct:
-			# add the count afterwards since urls will appear twice in CVE/NVD for example
-			dedupe_data_struct[url_value]["GSDs"][gsd_id_value]=data_type_value
-			# TODO: clean up theh namespace_value data
-			# data_type_value = GSD/namespaces, we also need the namespace e.g. cve.org. need some logic to find this
+			pass
 		else:
+			hostname_list = hostname.split(".")
+			hostname_list.reverse()
 			dedupe_data_struct[url_value]={}
 			# add the count afterwards since urls will appear twice in CVE/NVD for example
+			dedupe_data_struct[url_value]["hostname"]=hostname_list
 			dedupe_data_struct[url_value]["GSDs"]={}
-			dedupe_data_struct[url_value]["GSDs"][gsd_id_value]=data_type_value
-			# TODO: clean up theh namespace_value data
-			# TODO: change to list, chuck in namespaces?
+			dedupe_data_struct[url_value]["URLstatus"]=url_status_message
+
+		dedupe_data_struct[url_value]["GSDs"][gsd_id_value]=data_type_value
+
+		# TODO: clean up theh namespace_value data
+		# TODO: change to list, chuck in namespaces?
 
 
 def write_dedupe_struct_to_files(data):
